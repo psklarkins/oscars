@@ -175,6 +175,27 @@ document.addEventListener('DOMContentLoaded', () => {
         { id: 'osc-sinners', title: 'Sinners', category: 'Best Original Screenplay' },
     ];
 
+    const posters = {
+        'Sinners': 'https://image.tmdb.org/t/p/w300/cuM1rGXxTd28KEQXBG683ODtWPY.jpg',
+        'F1': 'https://image.tmdb.org/t/p/w300/vqBmyAj0Xm9LnS1xe1MSlMAJyHq.jpg',
+        'Zootopia 2': 'https://image.tmdb.org/t/p/w300/oJ7g2CifqpStmoYQyaLQgEU32qO.jpg',
+        'Bugonia': 'https://image.tmdb.org/t/p/w300/oxgsAQDAAxA92mFGYCZllgWkH9J.jpg',
+        'Jurassic World Rebirth': 'https://image.tmdb.org/t/p/w300/sGfjoazodTIvYINfQQJ42C5sIXl.jpg',
+        'Frankenstein': 'https://image.tmdb.org/t/p/w300/g4JtvGlQO7DByTI6frUobqvSL3R.jpg',
+        'Elio': 'https://image.tmdb.org/t/p/w300/7z8jDiTZZco9moIKpTUImFtTy7o.jpg',
+        'Hamnet': 'https://image.tmdb.org/t/p/w300/vbeyOZm2bvBXcbgPD3v6o94epPX.jpg',
+        'Marty Supreme': 'https://image.tmdb.org/t/p/w300/lYWEXbQgRTR4ZQleSXAgRbxAjvq.jpg',
+        'One Battle After Another': 'https://image.tmdb.org/t/p/w300/leQ7ilvHdnQWAB5JV3ATBnRyQSD.jpg',
+        'The Smashing Machine': 'https://image.tmdb.org/t/p/w300/mPuBDGrVIBGOymBxR6rO3iIvBSe.jpg',
+        'Avatar: Fire and Ash': 'https://image.tmdb.org/t/p/w300/bRBeSHfGHwkEpImlhxPmOcUsaeg.jpg',
+        'Sentimental Value': 'https://image.tmdb.org/t/p/w300/pz9NCWxxOk3o0W3v1Zkhawrwb4i.jpg',
+        'The Secret Agent': 'https://image.tmdb.org/t/p/w300/iLE2YOmeboeTDC7GlOp1dzh1VFo.jpg',
+        'Blue Moon': 'https://image.tmdb.org/t/p/w300/AetJmEIrhww0xnfktYgNl6ztDrl.jpg',
+        'The Secret Agent (Brazil)': 'https://image.tmdb.org/t/p/w300/iLE2YOmeboeTDC7GlOp1dzh1VFo.jpg',
+        'Sentimental Value (Norway)': 'https://image.tmdb.org/t/p/w300/pz9NCWxxOk3o0W3v1Zkhawrwb4i.jpg'
+    };
+
+
     const categories = [...new Set(nominees.map(n => n.category))];
     let voterName = '';
     let votes = {};
@@ -282,7 +303,16 @@ document.addEventListener('DOMContentLoaded', () => {
             categoryNominees.forEach(nominee => {
                 const card = document.createElement('div');
                 card.className = 'nominee-card';
+                
+                // Look up poster: use subtitle (movie name) for person nominees, title for movie nominees
+                const movieTitle = nominee.subtitle || nominee.title;
+                const posterUrl = posters[movieTitle];
+                const posterHtml = posterUrl
+                    ? `<img class="nominee-poster" src="${posterUrl}" alt="${movieTitle}" loading="lazy">`
+                    : `<div class="nominee-poster-placeholder"></div>`;
+
                 card.innerHTML = `
+                    ${posterHtml}
                     <div>
                         <h3 class="nominee-title">${nominee.title}</h3>
                         <p class="nominee-subtitle">${nominee.subtitle || '&nbsp;'}</p>
@@ -291,6 +321,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 `;
                 grid.appendChild(card);
             });
+
 
             section.appendChild(grid);
             nomineeContainer.appendChild(section);
