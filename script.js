@@ -347,7 +347,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- EVENT HANDLING ---
-    nomineeContainer.addEventListener('click', (e) => {
+    nomineeContainer.addEventListener('click', async (e) => {
         if (e.target.classList.contains('vote-button')) {
             if (!voterName) {
                 nameModalOverlay.classList.add('visible');
@@ -355,10 +355,10 @@ document.addEventListener('DOMContentLoaded', () => {
                 return;
             }
             const { id, category } = e.target.dataset;
-            
+
             // Record vote
             await saveVote(voterName, id, category);
-            
+
             await loadVotes();
             updateUI();
         }
