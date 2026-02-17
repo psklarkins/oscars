@@ -213,15 +213,17 @@
                     fetch('/api/votes'),
                     fetch('/api/voters')
                 ]);
-                const votes = await votesResponse.json();
-                const voters = await votersResponse.json();
+                const votesData = await votesResponse.json();
+                const votersData = await votersResponse.json();
+                const votes = votesData.votes || {};
+                const voters = votersData.voters || [];
 
                 const voterActivity = {};
 
                 // Initialize all known voters
-                voters.forEach(voterName => {
-                    voterActivity[voterName] = {
-                        name: voterName,
+                voters.forEach(voter => {
+                    voterActivity[voter.name] = {
+                        name: voter.name,
                         voteCount: 0,
                         picks: []
                     };
