@@ -235,10 +235,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     changeNameLink.addEventListener('click', (e) => {
         e.preventDefault();
+        // Only clear current voter's votes, not everyone's
+        const oldName = voterName;
+        Object.keys(votes).forEach(key => {
+            if (key.startsWith(`${oldName}-`)) {
+                delete votes[key];
+            }
+        });
+        saveVotes();
         localStorage.removeItem('oscarsVoterName');
         voterName = '';
-        votes = {}; // Optionally clear votes when name changes
-        saveVotes();
         location.reload();
     });
 
@@ -343,8 +349,8 @@ document.addEventListener('DOMContentLoaded', () => {
     nomineeContainer.addEventListener('click', (e) => {
         if (e.target.classList.contains('vote-button')) {
             if (!voterName) {
-                alert("Please enter your name first!");
                 nameModalOverlay.classList.add('visible');
+                nameInput.focus();
                 return;
             }
             const { id, category } = e.target.dataset;
@@ -384,7 +390,7 @@ document.addEventListener('DOMContentLoaded', () => {
         let currentCategory = '';
         sections.forEach(section => {
             const sectionTop = section.offsetTop;
-            if (pageYOffset >= sectionTop - 100) {
+            if (window.scrollY >= sectionTop - 100) {
                 currentCategory = section.getAttribute('id');
             }
         });
