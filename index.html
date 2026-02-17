@@ -3,28 +3,48 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Oscars 2026 — Vote for Your Favorites</title>
+    <title>Oscars 2026 Voting</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <header>
-        <h1>Oscars 2026 — Vote for Your Favorites</h1>
-    </header>
-    <main>
-        <section id="movies-list">
-            <h2>Nominated Movies</h2>
-            <div id="movie-cards-container">
-                <!-- Movie cards will be injected here by script.js -->
-            </div>
-        </section>
 
-        <section id="results">
-            <h2>Live Voting Results</h2>
-            <div id="results-container">
-                <!-- Voting results will be displayed here by script.js -->
-            </div>
-        </section>
-    </main>
+    <div id="name-modal-overlay">
+        <div id="name-modal">
+            <h2>Welcome to the Oscars 2026 Ballot</h2>
+            <p>Please enter your name to begin.</p>
+            <form id="name-form">
+                <input type="text" id="voter-name-input" placeholder="Your Name" required autocomplete="name">
+                <button type="submit">Start Voting</button>
+            </form>
+        </div>
+    </div>
+
+    <header id="app-header">
+        <h1>Oscars 2026 Ballot</h1>
+        <div id="voter-info">
+            <span id="welcome-message"></span>
+            <a href="#" id="change-name-link">Change Name</a>
+        </div>
+    </header>
+
+    <div class="app-container">
+        <nav id="category-nav">
+            <button id="mobile-nav-toggle">Categories <span class="arrow">&#9662;</span></button>
+            <ul id="category-list"></ul>
+        </nav>
+    
+        <main id="nominee-container">
+            <!-- Nominees will be rendered here by JavaScript -->
+        </main>
+    </div>
+
+    <section id="results-section">
+        <h2>Voting Results</h2>
+        <div id="results-container">
+            <!-- Results will be rendered here by JavaScript -->
+        </div>
+    </section>
+    
     <script src="script.js"></script>
 </body>
 </html>
