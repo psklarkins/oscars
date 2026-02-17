@@ -383,10 +383,6 @@ main#nominee-container {
 #page-nav {
     display: flex;
     gap: 1.5rem;
-    position: absolute;
-    left: 2rem;
-    top: 50%;
-    transform: translateY(-50%);
 }
 #page-nav a {
     color: #D4AF37;
