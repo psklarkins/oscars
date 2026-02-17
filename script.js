@@ -192,20 +192,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const categoryNav = document.getElementById('category-nav');
     
     // --- STATE MANAGEMENT ---
-    const loadVotes = () => {
+    const loadVotes = async () => {
         try {
-            votes = JSON.parse(localStorage.getItem('oscarsVotes2026')) || {};
+            const res = await fetch('/api/votes');
+            const data = await res.json();
+            votes = data.votes || {};
         } catch (e) {
-            console.error("Could not parse votes from localStorage", e);
+            console.error('Failed to load votes:', e);
             votes = {};
         }
     };
 
-    const saveVotes = () => {
+    const saveVote = async (voter, nomineeId, category) => {
         try {
-            localStorage.setItem('oscarsVotes2026', JSON.stringify(votes));
+            await fetch('/api/vote', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ voter, nomineeId, category })
+            });
         } catch (e) {
-            console.error("Could not save votes to localStorage", e);
+            console.error('Failed to save vote:', e);
         }
     };
     
@@ -237,12 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         // Only clear current voter's votes, not everyone's
         const oldName = voterName;
-        Object.keys(votes).forEach(key => {
-            if (key.startsWith(`${oldName}-`)) {
-                delete votes[key];
-            }
-        });
-        saveVotes();
+
         localStorage.removeItem('oscarsVoterName');
         voterName = '';
         location.reload();
@@ -356,10 +357,9 @@ document.addEventListener('DOMContentLoaded', () => {
             const { id, category } = e.target.dataset;
             
             // Record vote
-            const voteKey = `${voterName}-${category}`;
-            votes[voteKey] = { voter: voterName, nomineeId: id, category: category };
+            await saveVote(voterName, id, category);
             
-            saveVotes();
+            await loadVotes();
             updateUI();
         }
     });
@@ -433,8 +433,8 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     // --- INITIALIZATION ---
-    function init() {
-        loadVotes();
+    async function init() {
+        await loadVotes();
         handleVoterName();
         renderCategories();
         renderNominees();
