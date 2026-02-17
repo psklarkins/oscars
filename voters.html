@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Voter Activity - Oscars 2026</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+    <header id="app-header">
+        <nav id="page-nav">
+            <a href="index.html">Ballot</a>
+            <a href="voters.html" class="active">Voters</a>
+        </nav>
+        <h1>Oscars 2026 Ballot</h1>
+        <div id="voter-info">
+            <span id="welcome-message"></span>
+            <a href="#" id="change-name-link">Change Name</a>
+        </div>
+    </header>
+
+    <main id="voters-container">
+        <!-- Voter cards will be rendered here -->
+    </main>
+    
+    <script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const nominees = [
+            // Best Picture (10 nominees)
+            { id: 'bp-bugonia', title: 'Bugonia', category: 'Best Picture' },
+            { id: 'bp-f1', title: 'F1', category: 'Best Picture' },
+            { id: 'bp-frankenstein', title: 'Frankenstein', category: 'Best Picture' },
+            { id: 'bp-hamnet', title: 'Hamnet', category: 'Best Picture' },
+            { id: 'bp-marty-supreme', title: 'Marty Supreme', category: 'Best Picture' },
+            { id: 'bp-one-battle', title: 'One Battle After Another', category: 'Best Picture' },
+            { id: 'bp-secret-agent', title: 'The Secret Agent', category: 'Best Picture' },
+            { id: 'bp-sentimental-value', title: 'Sentimental Value', category: 'Best Picture' },
+            { id: 'bp-sinners', title: 'Sinners', category: 'Best Picture' },
+            { id: 'bp-train-dreams', title: 'Train Dreams', category: 'Best Picture' },
+
+            // Best Director (5 nominees)
+            { id: 'dir-zhao', title: 'Chloé Zhao', subtitle: 'Hamnet', category: 'Best Director' },
+            { id: 'dir-safdie', title: 'Josh Safdie', subtitle: 'Marty Supreme', category: 'Best Director' },
+            { id: 'dir-anderson', title: 'Paul Thomas Anderson', subtitle: 'One Battle After Another', category: 'Best Director' },
+            { id: 'dir-trier', title: 'Joachim Trier', subtitle: 'Sentimental Value', category: 'Best Director' },
+            { id: 'dir-coogler', title: 'Ryan Coogler', subtitle: 'Sinners', category: 'Best Director' },
+
+            // Best Actor (5 nominees)
+            { id: 'act-chalamet', title: 'Timothée Chalamet', subtitle: 'Marty Supreme', category: 'Best Actor' },
+            { id: 'act-dicaprio', title: 'Leonardo DiCaprio', subtitle: 'One Battle After Another', category: 'Best Actor' },
+            { id: 'act-hawke', title: 'Ethan Hawke', subtitle: 'Blue Moon', category: 'Best Actor' },
+            { id: 'act-jordan', title: 'Michael B. Jordan', subtitle: 'Sinners', category: 'Best Actor' },
+            { id: 'act-moura', title: 'Wagner Moura', subtitle: 'The Secret Agent', category: 'Best Actor' },
+
+            // Best Actress (5 nominees)
+            { id: 'actr-buckley', title: 'Jessie Buckley', subtitle: 'Hamnet', category: 'Best Actress' },
+            { id: 'actr-byrne', title: 'Rose Byrne', subtitle: 'If I Had Legs I\'d Kick You', category: 'Best Actress' },
+            { id: 'actr-hudson', title: 'Kate Hudson', subtitle: 'Song Sung Blue', category: 'Best Actress' },
+            { id: 'actr-reinsve', title: 'Renate Reinsve', subtitle: 'Sentimental Value', category: 'Best Actress' },
+            { id: 'actr-stone', title: 'Emma Stone', subtitle: 'Bugonia', category: 'Best Actress' },
+
+            // Best Supporting Actor (5 nominees)
+            { id: 'sact-deltoro', title: 'Benicio del Toro', subtitle: 'One Battle After Another', category: 'Best Supporting Actor' },
+            { id: 'sact-elordi', title: 'Jacob Elordi', subtitle: 'Frankenstein', category: 'Best Supporting Actor' },
+            { id: 'sact-lindo', title: 'Delroy Lindo', subtitle: 'Sinners', category: 'Best Supporting Actor' },
+            { id: 'sact-penn', title: 'Sean Penn', subtitle: 'One Battle After Another', category: 'Best Supporting Actor' },
+            { id: 'sact-skarsgard', title: 'Stellan Skarsgård', subtitle: 'Sentimental Value', category: 'Best Supporting Actor' },
+
+            // Best Supporting Actress (5 nominees)
+            { id: 'sactr-fanning', title: 'Elle Fanning', subtitle: 'Sentimental Value', category: 'Best Supporting Actress' },
+            { id: 'sactr-lilleaas', title: 'Inga Ibsdotter Lilleaas', subtitle: 'Sentimental Value', category: 'Best Supporting Actress' },
+            { id: 'sactr-madigan', title: 'Amy Madigan', subtitle: 'Weapons', category: 'Best Supporting Actress' },
+            { id: 'sactr-mosaku', title: 'Wunmi Mosaku', subtitle: 'Sinners', category: 'Best Supporting Actress' },
+            { id: 'sactr-taylor', title: 'Teyana Taylor', subtitle: 'One Battle After Another', category: 'Best Supporting Actress' },
+
+            // Best Animated Feature (5 nominees)
+            { id: 'anim-arco', title: 'Arco', category: 'Best Animated Feature' },
+            { id: 'anim-elio', title: 'Elio', category: 'Best Animated Feature' },
+            { id: 'anim-kpop', title: 'KPop Demon Hunters', category: 'Best Animated Feature' },
+            { id: 'anim-amelie', title: 'Little Amélie or the Character of Rain', category: 'Best Animated Feature' },
+            { id: 'anim-zootopia', title: 'Zootopia 2', category: 'Best Animated Feature' },
+
+            // Best Animated Short (5 nominees)
+            { id: 'ashort-butterfly', title: 'Butterfly', category: 'Best Animated Short' },
+            { id: 'ashort-forevergreen', title: 'Forevergreen', category: 'Best Animated Short' },
+            { id: 'ashort-pearls', title: 'The Girl Who Cried Pearls', category: 'Best Animated Short' },
+            { id: 'ashort-retirement', title: 'Retirement Plan', category: 'Best Animated Short' },
+            { id: 'ashort-sisters', title: 'The Three Sisters', category: 'Best Animated Short' },
+
+            // Best Cinematography (5 nominees)
+            { id: 'cin-frankenstein', title: 'Frankenstein', category: 'Best Cinematography' },
+            { id: 'cin-marty', title: 'Marty Supreme', category: 'Best Cinematography' },
+            { id: 'cin-one-battle', title: 'One Battle After Another', category: 'Best Cinematography' },
+            { id: 'cin-sinners', title: 'Sinners', category: 'Best Cinematography' },
+            { id: 'cin-train', title: 'Train Dreams', category: 'Best Cinematography' },
+
+            // Best Costume Design (5 nominees)
+            { id: 'cos-avatar', title: 'Avatar: Fire and Ash', category: 'Best Costume Design' },
+            { id: 'cos-frankenstein', title: 'Frankenstein', category: 'Best Costume Design' },
+            { id: 'cos-hamnet', title: 'Hamnet', category: 'Best Costume Design' },
+            { id: 'cos-marty', title: 'Marty Supreme', category: 'Best Costume Design' },
+            { id: 'cos-sinners', title: 'Sinners', category: 'Best Costume Design' },
+
+            // Best Documentary Feature (5 nominees)
+            { id: 'doc-alabama', title: 'The Alabama Solution', category: 'Best Documentary Feature' },
+            { id: 'doc-good-light', title: 'Come See Me in the Good Light', category: 'Best Documentary Feature' },
+            { id: 'doc-rocks', title: 'Cutting Through Rocks', category: 'Best Documentary Feature' },
+            { id: 'doc-putin', title: 'Mr. Nobody Against Putin', category: 'Best Documentary Feature' },
+            { id: 'doc-neighbor', title: 'The Perfect Neighbor', category: 'Best Documentary Feature' },
+
+            // Best Documentary Short (5 nominees)
+            { id: 'dshort-rooms', title: 'All the Empty Rooms', category: 'Best Documentary Short' },
+            { id: 'dshort-camera', title: 'Armed Only With a Camera', category: 'Best Documentary Short' },
+            { id: 'dshort-children', title: 'Children No More', category: 'Best Documentary Short' },
+            { id: 'dshort-devil', title: 'The Devil Is Busy', category: 'Best Documentary Short' },
+            { id: 'dshort-strange', title: 'Perfectly a Strangeness', category: 'Best Documentary Short' },
+
+            // Best Film Editing (5 nominees)
+            { id: 'edit-f1', title: 'F1', category: 'Best Film Editing' },
+            { id: 'edit-marty', title: 'Marty Supreme', category: 'Best Film Editing' },
+            { id: 'edit-one-battle', title: 'One Battle After Another', category: 'Best Film Editing' },
+            { id: 'edit-sentimental', title: 'Sentimental Value', category: 'Best Film Editing' },
+            { id: 'edit-sinners', title: 'Sinners', category: 'Best Film Editing' },
+
+            // Best International Feature (5 nominees)
+            { id: 'intl-secret-agent', title: 'The Secret Agent (Brazil)', category: 'Best International Feature' },
+            { id: 'intl-accident', title: 'It Was Just an Accident (France)', category: 'Best International Feature' },
+            { id: 'intl-sentimental', title: 'Sentimental Value (Norway)', category: 'Best International Feature' },
+            { id: 'intl-sirat', title: 'Sirāt (Spain)', category: 'Best International Feature' },
+            { id: 'intl-hind', title: 'The Voice of Hind Rajab (Tunisia)', category: 'Best International Feature' },
+
+            // Best Casting (NEW category for 2026!) (5 nominees)
+            { id: 'cast-hamnet', title: 'Hamnet (Nina Gold)', category: 'Best Casting' },
+            { id: 'cast-marty', title: 'Marty Supreme (Jennifer Venditti)', category: 'Best Casting' },
+            { id: 'cast-one-battle', title: 'One Battle After Another (Cassandra Kulukundis)', category: 'Best Casting' },
+            { id: 'cast-secret-agent', title: 'The Secret Agent (Gabriel Domingues)', category: 'Best Casting' },
+            { id: 'cast-sinners', title: 'Sinners (Francine Maisler)', category: 'Best Casting' },
+
+            // Best Makeup and Hairstyling (5 nominees)
+            { id: 'mua-frankenstein', title: 'Frankenstein', category: 'Best Makeup and Hairstyling' },
+            { id: 'mua-kokuho', title: 'Kokuho', category: 'Best Makeup and Hairstyling' },
+            { id: 'mua-sinners', title: 'Sinners', category: 'Best Makeup and Hairstyling' },
+            { id: 'mua-smashing', title: 'The Smashing Machine', category: 'Best Makeup and Hairstyling' },
+            { id: 'mua-stepsister', title: 'The Ugly Stepsister', category: 'Best Makeup and Hairstyling' },
+
+            // Best Original Score (5 nominees)
+            { id: 'score-bugonia', title: 'Bugonia', category: 'Best Original Score' },
+            { id: 'score-frankenstein', title: 'Frankenstein', category: 'Best Original Score' },
+            { id: 'score-hamnet', title: 'Hamnet', category: 'Best Original Score' },
+            { id: 'score-one-battle', title: 'One Battle After Another', category: 'Best Original Score' },
+            { id: 'score-sinners', title: 'Sinners', category: 'Best Original Score' },
+
+            // Best Original Song (5 nominees)
+            { id: 'song-dear-me', title: '"Dear Me"', subtitle: 'Diane Warren: Relentless', category: 'Best Original Song' },
+            { id: 'song-golden', title: '"Golden"', subtitle: 'KPop Demon Hunters', category: 'Best Original Song' },
+            { id: 'song-i-lied', title: '"I Lied to You"', subtitle: 'Sinners', category: 'Best Original Song' },
+            { id: 'song-sweet-dreams', title: '"Sweet Dreams of Joy"', subtitle: 'Viva Verdi!', category: 'Best Original Song' },
+            { id: 'song-train-dreams', title: '"Train Dreams"', subtitle: 'Train Dreams', category: 'Best Original Song' },
+
+            // Best Production Design (5 nominees)
+            { id: 'prod-frankenstein', title: 'Frankenstein', category: 'Best Production Design' },
+            { id: 'prod-hamnet', title: 'Hamnet', category: 'Best Production Design' },
+            { id: 'prod-marty', title: 'Marty Supreme', category: 'Best Production Design' },
+            { id: 'prod-one-battle', title: 'One Battle After Another', category: 'Best Production Design' },
+            { id: 'prod-sinners', title: 'Sinners', category: 'Best Production Design' },
+
+            // Best Live Action Short (5 nominees)
+            { id: 'lshort-butcher', title: "Butcher's Stain", category: 'Best Live Action Short' },
+            { id: 'lshort-dorothy', title: 'A Friend of Dorothy', category: 'Best Live Action Short' },
+            { id: 'lshort-austen', title: "Jane Austen's Period Drama", category: 'Best Live Action Short' },
+            { id: 'lshort-singers', title: 'The Singers', category: 'Best Live Action Short' },
+            { id: 'lshort-saliva', title: 'Two People Exchanging Saliva', category: 'Best Live Action Short' },
+
+            // Best Sound (5 nominees)
+            { id: 'snd-f1', title: 'F1', category: 'Best Sound' },
+            { id: 'snd-frankenstein', title: 'Frankenstein', category: 'Best Sound' },
+            { id: 'snd-one-battle', title: 'One Battle After Another', category: 'Best Sound' },
+            { id: 'snd-sinners', title: 'Sinners', category: 'Best Sound' },
+            { id: 'snd-sirat', title: 'Sirāt', category: 'Best Sound' },
+
+            // Best Visual Effects (5 nominees)
+            { id: 'vfx-avatar', title: 'Avatar: Fire and Ash', category: 'Best Visual Effects' },
+            { id: 'vfx-f1', title: 'F1', category: 'Best Visual Effects' },
+            { id: 'vfx-jurassic', title: 'Jurassic World Rebirth', category: 'Best Visual Effects' },
+            { id: 'vfx-lost-bus', title: 'The Lost Bus', category: 'Best Visual Effects' },
+            { id: 'vfx-sinners', title: 'Sinners', category: 'Best Visual Effects' },
+
+            // Best Adapted Screenplay (5 nominees)
+            { id: 'asc-bugonia', title: 'Bugonia', category: 'Best Adapted Screenplay' },
+            { id: 'asc-frankenstein', title: 'Frankenstein', category: 'Best Adapted Screenplay' },
+            { id: 'asc-hamnet', title: 'Hamnet', category: 'Best Adapted Screenplay' },
+            { id: 'asc-one-battle', title: 'One Battle After Another', category: 'Best Adapted Screenplay' },
+            { id: 'asc-train', title: 'Train Dreams', category: 'Best Adapted Screenplay' },
+
+            // Best Original Screenplay (5 nominees)
+            { id: 'osc-blue-moon', title: 'Blue Moon', category: 'Best Original Screenplay' },
+            { id: 'osc-accident', title: 'It Was Just an Accident', category: 'Best Original Screenplay' },
+            { id: 'osc-marty', title: 'Marty Supreme', category: 'Best Original Screenplay' },
+            { id: 'osc-sentimental', title: 'Sentimental Value', category: 'Best Original Screenplay' },
+            { id: 'osc-sinners', title: 'Sinners', category: 'Best Original Screenplay' },
+        ];
+        const nomineesById = nominees.reduce((acc, nominee) => {
+            acc[nominee.id] = nominee;
+            return acc;
+        }, {});
+
+        const votersContainer = document.getElementById('voters-container');
+
+        async function fetchAndRenderVoters() {
+            try {
+                const [votesResponse, votersResponse] = await Promise.all([
+                    fetch('/api/votes'),
+                    fetch('/api/voters')
+                ]);
+                const votes = await votesResponse.json();
+                const voters = await votersResponse.json();
+
+                const voterActivity = {};
+
+                // Initialize all known voters
+                voters.forEach(voterName => {
+                    voterActivity[voterName] = {
+                        name: voterName,
+                        voteCount: 0,
+                        picks: []
+                    };
+                });
+
+                // Process votes
+                Object.values(votes).forEach(vote => {
+                    if (!voterActivity[vote.voter]) {
+                         voterActivity[vote.voter] = {
+                            name: vote.voter,
+                            voteCount: 0,
+                            picks: []
+                        };
+                    }
+                    voterActivity[vote.voter].voteCount++;
+                    const nominee = nomineesById[vote.nomineeId];
+                    if (nominee) {
+                        voterActivity[vote.voter].picks.push({
+                            category: nominee.category,
+                            title: nominee.title
+                        });
+                    }
+                });
+                
+                const sortedVoters = Object.values(voterActivity).sort((a, b) => b.voteCount - a.voteCount);
+
+                renderVoters(sortedVoters);
+
+            } catch (error) {
+                console.error('Error fetching voter data:', error);
+                votersContainer.innerHTML = '<p class="error-message">Could not load voter activity. Please try again later.</p>';
+            }
+        }
+
+        function renderVoters(voters) {
+            votersContainer.innerHTML = '';
+            if (voters.length === 0) {
+                votersContainer.innerHTML = '<p>No voters have participated yet.</p>';
+                return;
+            }
+
+            voters.forEach(voter => {
+                const card = document.createElement('div');
+                card.className = 'voter-card';
+
+                const picksHtml = voter.picks.map(pick => 
+                    `<li><strong>${pick.category}:</strong> ${pick.title}</li>`
+                ).join('');
+
+                card.innerHTML = `
+                    <div class="voter-card-header">
+                        <h2 class="voter-name">${voter.name}</h2>
+                        <div class="voter-vote-count" title="${voter.voteCount} votes">
+                            <span>${voter.voteCount}</span>
+                        </div>
+                    </div>
+                    <div class="voter-picks">
+                        <h3>Picks:</h3>
+                        <ul>
+                            ${picksHtml || '<li>No votes recorded yet.</li>'}
+                        </ul>
+                    </div>
+                `;
+                votersContainer.appendChild(card);
+            });
+        }
+        
+        // --- Voter Name in Header ---
+        const welcomeMessage = document.getElementById('welcome-message');
+        const changeNameLink = document.getElementById('change-name-link');
+        const storedName = localStorage.getItem('oscarsVoterName');
+        if (storedName) {
+            welcomeMessage.textContent = `Welcome, ${storedName}!`;
+        }
+        changeNameLink.addEventListener('click', (e) => {
+             e.preventDefault();
+             localStorage.removeItem('oscarsVoterName');
+             location.href = 'index.html';
+        });
+
+
+        // Initial load and auto-refresh
+        fetchAndRenderVoters();
+        setInterval(fetchAndRenderVoters, 30000); // Refresh every 30 seconds
+    });
+    </script>
+</body>
+</html>
