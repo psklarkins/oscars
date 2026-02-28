@@ -22,6 +22,28 @@ const MIME_TYPES = {
     '.ico': 'image/x-icon'
 };
 
+function resolveSafeStaticPath(requestUrl) {
+    let pathname = '/';
+
+    try {
+        const parsedUrl = new URL(requestUrl, 'http://localhost');
+        pathname = decodeURIComponent(parsedUrl.pathname || '/');
+    } catch {
+        return null;
+    }
+
+    const relativePath = pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, '');
+    const normalizedPath = path.normalize(relativePath);
+    const absolutePath = path.resolve(__dirname, normalizedPath);
+    const rootPath = path.resolve(__dirname);
+
+    if (absolutePath !== rootPath && !absolutePath.startsWith(rootPath + path.sep)) {
+        return null;
+    }
+
+    return absolutePath;
+}
+
 // Ensure data directory and data files exist
 function initializeData() {
     if (!fs.existsSync(DATA_DIR)) {
@@ -60,10 +82,11 @@ function calculateLeaderboard() {
     const votes = getVotes();
     const winners = getWinners();
     const scores = {};
+    const total = Object.keys(winners).length;
 
     Object.values(votes).forEach(vote => {
         if (!scores[vote.voter]) {
-            scores[vote.voter] = { name: vote.voter, score: 0, correct: [] };
+            scores[vote.voter] = { name: vote.voter, score: 0, total, correct: [] };
         }
         
         // winners.json is expected to be { "category": "nomineeId" }
@@ -166,7 +189,7 @@ const server = http.createServer((req, res) => {
         } else if (req.url === '/api/winners' && req.method === 'GET') {
             if (now < ceremonyEnd) {
                 res.writeHead(403, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ message: 'Winners are not yet available. Wait until the ceremony ends!' }));
+                res.end(JSON.stringify({ message: 'Results hidden until ceremony ends' }));
                 return;
             }
             const winners = getWinners();
@@ -175,7 +198,7 @@ const server = http.createServer((req, res) => {
         } else if (req.url === '/api/leaderboard' && req.method === 'GET') {
             if (now < ceremonyEnd) {
                 res.writeHead(403, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ message: 'Leaderboard is not yet available. Wait until the ceremony ends!' }));
+                res.end(JSON.stringify({ message: 'Results hidden until ceremony ends' }));
                 return;
             }
             const leaderboard = calculateLeaderboard();
@@ -188,7 +211,22 @@ const server = http.createServer((req, res) => {
         }
     } else {
         // Serve Static Files
-        const filePath = path.join(__dirname, req.url === '/' ? 'index.html' : req.url);
+        const filePath = resolveSafeStaticPath(req.url);
+        if (!filePath) {
+            res.writeHead(400);
+            res.end('Bad request path');
+            return;
+        }
+
+        const relativePath = path.relative(__dirname, filePath);
+        const isDataFile = relativePath === 'data' || relativePath.startsWith(`data${path.sep}`);
+        const isSensitiveFile = ['server.js', 'config.js'].includes(relativePath);
+        if (isDataFile || isSensitiveFile) {
+            res.writeHead(404);
+            res.end('File not found');
+            return;
+        }
+
         const extname = String(path.extname(filePath)).toLowerCase();
         const contentType = MIME_TYPES[extname] || 'application/octet-stream';
 
