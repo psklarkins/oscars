@@ -217,6 +217,93 @@ main#nominee-container {
     border-top: 3px solid #D4AF37;
 }
 
+.winner-gold {
+    background-color: rgba(212, 175, 55, 0.2) !important;
+    border: 1px solid #D4AF37 !important;
+}
+
+.winner-badge {
+    color: #D4AF37;
+    font-weight: bold;
+    margin-left: 8px;
+    font-size: 0.9em;
+}
+
+.guess-indicator {
+    margin-left: 10px;
+    font-size: 1.2rem;
+}
+
+.guess-correct {
+    color: #4CAF50; /* Green */
+}
+
+.guess-correct::after {
+    content: ' ✓';
+}
+
+.guess-incorrect {
+    color: #f44336; /* Red */
+}
+
+.guess-incorrect::after {
+    content: ' ✗';
+}
+
+/* Leaderboard */
+#leaderboard-container {
+    margin-bottom: 3rem;
+    background: #1F1F1F;
+    padding: 1.5rem;
+    border-radius: 5px;
+    border: 1px solid #333;
+}
+
+#leaderboard-container h3 {
+    margin-top: 0;
+    text-align: center;
+}
+
+.leaderboard-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 1rem;
+}
+
+.leaderboard-table th, .leaderboard-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #333;
+}
+
+.leaderboard-table th {
+    color: #D4AF37;
+    font-weight: 300;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 1px;
+}
+
+.leaderboard-table tr:last-child td {
+    border-bottom: none;
+}
+
+.leaderboard-rank {
+    width: 50px;
+    font-weight: bold;
+    color: #888;
+}
+
+.leaderboard-score {
+    text-align: right;
+    font-weight: bold;
+    color: #D4AF37;
+}
+
+.leaderboard-me {
+    background-color: rgba(212, 175, 55, 0.1);
+}
+
 #results-container .category-result {
     margin-bottom: 2.5rem;
 }
@@ -538,4 +625,26 @@ main#nominee-container {
     text-align: center;
     grid-column: 1 / -1;
 }
+
+.hidden { display: none !important; }
+
+/* Lockout Banner */
+#lockout-banner {
+    position: sticky;
+    top: 73px; /* Just below header */
+    background-color: #f44336;
+    color: white;
+    text-align: center;
+    padding: 10px;
+    font-weight: bold;
+    z-index: 99;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+@media (max-width: 480px) {
+    #lockout-banner {
+        top: 110px; /* Header height is larger on mobile */
+    }
+}
+
 

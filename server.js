@@ -2,10 +2,13 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const CONFIG = require('./config');
 
-const PORT = 3000;
+const PORT = process.env.PORT || 3000;
 const DATA_DIR = path.join(__dirname, 'data');
 const VOTES_FILE = path.join(DATA_DIR, 'votes.json');
+const WINNERS_FILE = path.join(DATA_DIR, 'winners.json');
+
 
 const MIME_TYPES = {
     '.html': 'text/html',
@@ -19,13 +22,16 @@ const MIME_TYPES = {
     '.ico': 'image/x-icon'
 };
 
-// Ensure data directory and votes.json exist
+// Ensure data directory and data files exist
 function initializeData() {
     if (!fs.existsSync(DATA_DIR)) {
         fs.mkdirSync(DATA_DIR);
     }
     if (!fs.existsSync(VOTES_FILE)) {
         fs.writeFileSync(VOTES_FILE, JSON.stringify({}));
+    }
+    if (!fs.existsSync(WINNERS_FILE)) {
+        fs.writeFileSync(WINNERS_FILE, JSON.stringify({}));
     }
 }
 
@@ -39,6 +45,38 @@ function getVotes() {
     }
 }
 
+function getWinners() {
+    try {
+        if (!fs.existsSync(WINNERS_FILE)) return {};
+        const data = fs.readFileSync(WINNERS_FILE, 'utf8');
+        return JSON.parse(data);
+    } catch (error) {
+        console.error('Error reading winners.json:', error);
+        return {};
+    }
+}
+
+function calculateLeaderboard() {
+    const votes = getVotes();
+    const winners = getWinners();
+    const scores = {};
+
+    Object.values(votes).forEach(vote => {
+        if (!scores[vote.voter]) {
+            scores[vote.voter] = { name: vote.voter, score: 0, correct: [] };
+        }
+        
+        // winners.json is expected to be { "category": "nomineeId" }
+        if (winners[vote.category] === vote.nomineeId) {
+            scores[vote.voter].score++;
+            scores[vote.voter].correct.push(vote.category);
+        }
+    });
+
+    return Object.values(scores).sort((a, b) => b.score - a.score);
+}
+
+
 function saveVotes(votes) {
     const tempFilePath = VOTES_FILE + '.tmp';
     fs.writeFileSync(tempFilePath, JSON.stringify(votes, null, 2), 'utf8');
@@ -46,8 +84,13 @@ function saveVotes(votes) {
 }
 
 const server = http.createServer((req, res) => {
+    const now = Date.now();
+    const ceremonyStart = new Date(CONFIG.CEREMONY_START).getTime();
+    const ceremonyEnd = new Date(CONFIG.CEREMONY_END).getTime();
+    
     const timestamp = new Date().toISOString();
     console.log(`[${timestamp}] ${req.method} ${req.url}`);
+
 
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -66,7 +109,13 @@ const server = http.createServer((req, res) => {
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ votes }));
         } else if (req.url === '/api/vote' && req.method === 'POST') {
+            if (now > ceremonyStart) {
+                res.writeHead(403, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ message: 'Voting is closed. The ceremony has started!' }));
+                return;
+            }
             let body = '';
+
             req.on('data', chunk => {
                 body += chunk.toString();
             });
@@ -108,7 +157,32 @@ const server = http.createServer((req, res) => {
 
             res.writeHead(200, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ voters: Object.values(voterStats) }));
+        } else if (req.url === '/api/config' && req.method === 'GET') {
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ 
+                CEREMONY_START: CONFIG.CEREMONY_START,
+                CEREMONY_END: CONFIG.CEREMONY_END
+            }));
+        } else if (req.url === '/api/winners' && req.method === 'GET') {
+            if (now < ceremonyEnd) {
+                res.writeHead(403, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ message: 'Winners are not yet available. Wait until the ceremony ends!' }));
+                return;
+            }
+            const winners = getWinners();
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ winners }));
+        } else if (req.url === '/api/leaderboard' && req.method === 'GET') {
+            if (now < ceremonyEnd) {
+                res.writeHead(403, { 'Content-Type': 'application/json' });
+                res.end(JSON.stringify({ message: 'Leaderboard is not yet available. Wait until the ceremony ends!' }));
+                return;
+            }
+            const leaderboard = calculateLeaderboard();
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ leaderboard }));
         } else {
+
             res.writeHead(404, { 'Content-Type': 'application/json' });
             res.end(JSON.stringify({ message: 'API Endpoint Not Found' }));
         }
