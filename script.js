@@ -203,6 +203,13 @@ document.addEventListener('DOMContentLoaded', () => {
     let winners = {};
     let leaderboard = [];
 
+    const escapeHtml = (value) => String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+
 
     // --- DOM ELEMENTS ---
     const nameModalOverlay = document.getElementById('name-modal-overlay');
@@ -278,13 +285,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const saveVote = async (voter, nomineeId, category) => {
         try {
-            await fetch('/api/vote', {
+            const response = await fetch('/api/vote', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ voter, nomineeId, category })
             });
+
+            const payload = await response.json().catch(() => ({}));
+            if (!response.ok) {
+                throw new Error(payload.message || 'Failed to save vote');
+            }
+
+            return payload;
         } catch (e) {
             console.error('Failed to save vote:', e);
+            throw e;
         }
     };
     
@@ -314,8 +329,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     changeNameLink.addEventListener('click', (e) => {
         e.preventDefault();
-        // Only clear current voter's votes, not everyone's
-        const oldName = voterName;
 
         localStorage.removeItem('oscarsVoterName');
         voterName = '';
@@ -431,14 +444,18 @@ document.addEventListener('DOMContentLoaded', () => {
                 const li = document.createElement('li');
                 if (isWinner) li.classList.add('winner-gold');
 
+                const voterListText = voteInfo.voters.length > 0
+                    ? escapeHtml(voteInfo.voters.join(', '))
+                    : 'No votes yet';
+
                 li.innerHTML = `
                     <div class="result-nominee-info">
                         <span class="result-nominee-title">
-                            ${nominee.title}
+                            ${escapeHtml(nominee.title)}
                             ${isWinner ? '<span class="winner-badge">WINNER</span>' : ''}
                             ${feedbackHtml}
                         </span>
-                        <span class="result-voters">${voteInfo.voters.join(', ') || 'No votes yet'}</span>
+                        <span class="result-voters">${voterListText}</span>
                     </div>
                     <span class="result-vote-count">${voteInfo.count}</span>
                 `;
@@ -474,7 +491,7 @@ document.addEventListener('DOMContentLoaded', () => {
             html += `
                 <tr class="${isMe ? 'leaderboard-me' : ''}">
                     <td class="leaderboard-rank">${index + 1}</td>
-                    <td>${entry.name}</td>
+                    <td>${escapeHtml(entry.name)}</td>
                     <td class="leaderboard-score">${entry.score}</td>
                 </tr>
             `;
@@ -500,11 +517,14 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             const { id, category } = e.target.dataset;
 
-            // Record vote
-            await saveVote(voterName, id, category);
-
-            await loadVotes();
-            await updateUI();
+            try {
+                await saveVote(voterName, id, category);
+                await loadVotes();
+                await updateUI();
+            } catch (error) {
+                const message = error instanceof Error ? error.message : 'Failed to save vote';
+                alert(message);
+            }
         }
     });
     
@@ -562,7 +582,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (phase >= 2) {
             banner.textContent = phase === 2 
-                ? 'Voting is now LOCKED. The ceremony is underway!' 
+                ? 'Guesses Locked! Enjoy the show.' 
                 : 'Voting has CLOSED. Check the final results below!';
             banner.classList.remove('hidden');
             

@@ -229,6 +229,15 @@
 
         const votersContainer = document.getElementById('voters-container');
 
+        function escapeHtml(value) {
+            return String(value)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
         async function fetchAndRenderVoters() {
             try {
                 const [votesResponse, votersResponse] = await Promise.all([
@@ -292,12 +301,14 @@
                 card.className = 'voter-card';
 
                 const picksHtml = voter.picks.map(pick => 
-                    `<li><strong>${pick.category}:</strong> ${pick.title}</li>`
+                    `<li><strong>${escapeHtml(pick.category)}:</strong> ${escapeHtml(pick.title)}</li>`
                 ).join('');
+
+                const safeName = escapeHtml(voter.name);
 
                 card.innerHTML = `
                     <div class="voter-card-header">
-                        <h2 class="voter-name">${voter.name}</h2>
+                        <h2 class="voter-name">${safeName}</h2>
                         <div class="voter-vote-count" title="${voter.voteCount} votes">
                             <span>${voter.voteCount}</span>
                         </div>
