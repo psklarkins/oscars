@@ -199,6 +199,10 @@ document.addEventListener('DOMContentLoaded', () => {
     const categories = [...new Set(nominees.map(n => n.category))];
     let voterName = '';
     let votes = {};
+    let config = {};
+    let winners = {};
+    let leaderboard = [];
+
 
     // --- DOM ELEMENTS ---
     const nameModalOverlay = document.getElementById('name-modal-overlay');
@@ -209,6 +213,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const categoryList = document.getElementById('category-list');
     const nomineeContainer = document.getElementById('nominee-container');
     const resultsContainer = document.getElementById('results-container');
+    const leaderboardContainer = document.getElementById('leaderboard-container');
     const mobileNavToggle = document.getElementById('mobile-nav-toggle');
     const categoryNav = document.getElementById('category-nav');
     
@@ -223,6 +228,53 @@ document.addEventListener('DOMContentLoaded', () => {
             votes = {};
         }
     };
+
+    const loadWinners = async () => {
+        try {
+            const res = await fetch('/api/winners');
+            const data = await res.json();
+            winners = data.winners || {};
+        } catch (e) {
+            console.error('Failed to load winners:', e);
+            winners = {};
+        }
+    };
+
+    const loadLeaderboard = async () => {
+        try {
+            const res = await fetch('/api/leaderboard');
+            const data = await res.json();
+            leaderboard = data.leaderboard || [];
+        } catch (e) {
+            console.error('Failed to load leaderboard:', e);
+            leaderboard = [];
+        }
+    };
+
+    const loadConfig = async () => {
+        try {
+            const res = await fetch('/api/config');
+            config = await res.json();
+        } catch (e) {
+            console.error('Failed to load config:', e);
+            // Fallback to Phase 1
+            config = { 
+                CEREMONY_START: Date.now() + 86400000, 
+                CEREMONY_END: Date.now() + 172800000 
+            };
+        }
+    };
+
+    const checkPhase = () => {
+        const now = Date.now();
+        const start = new Date(config.CEREMONY_START).getTime();
+        const end = new Date(config.CEREMONY_END).getTime();
+
+        if (now < start) return 1; // Open
+        if (now < end) return 2;   // Locked
+        return 3;                  // Results
+    };
+
 
     const saveVote = async (voter, nomineeId, category) => {
         try {
@@ -329,6 +381,7 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     const renderResults = () => {
+        const phase = checkPhase();
         resultsContainer.innerHTML = '';
         
         // Collate votes by nominee
@@ -360,12 +413,31 @@ document.addEventListener('DOMContentLoaded', () => {
                 return countB - countA;
             });
 
+            const winnerId = winners[category];
+
             categoryNominees.forEach(nominee => {
                 const voteInfo = voteCounts[nominee.id] || { count: 0, voters: [] };
+                const isWinner = nominee.id === winnerId;
+                const userVotedForThis = votes[`${voterName}-${category}`]?.nomineeId === nominee.id;
+                
+                let feedbackHtml = '';
+                if (phase === 3 && winnerId) {
+                    if (userVotedForThis) {
+                        const isCorrect = nominee.id === winnerId;
+                        feedbackHtml = `<span class="guess-indicator ${isCorrect ? 'guess-correct' : 'guess-incorrect'}"></span>`;
+                    }
+                }
+
                 const li = document.createElement('li');
+                if (isWinner) li.classList.add('winner-gold');
+
                 li.innerHTML = `
                     <div class="result-nominee-info">
-                        <span class="result-nominee-title">${nominee.title}</span>
+                        <span class="result-nominee-title">
+                            ${nominee.title}
+                            ${isWinner ? '<span class="winner-badge">WINNER</span>' : ''}
+                            ${feedbackHtml}
+                        </span>
                         <span class="result-voters">${voteInfo.voters.join(', ') || 'No votes yet'}</span>
                     </div>
                     <span class="result-vote-count">${voteInfo.count}</span>
@@ -377,10 +449,51 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
+    const renderLeaderboard = () => {
+        if (checkPhase() < 3) {
+            leaderboardContainer.style.display = 'none';
+            return;
+        }
+        leaderboardContainer.style.display = 'block';
+        
+        let html = `
+            <h3>Leaderboard</h3>
+            <table class="leaderboard-table">
+                <thead>
+                    <tr>
+                        <th class="leaderboard-rank">Rank</th>
+                        <th>Voter</th>
+                        <th class="leaderboard-score">Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        leaderboard.forEach((entry, index) => {
+            const isMe = entry.name === voterName;
+            html += `
+                <tr class="${isMe ? 'leaderboard-me' : ''}">
+                    <td class="leaderboard-rank">${index + 1}</td>
+                    <td>${entry.name}</td>
+                    <td class="leaderboard-score">${entry.score}</td>
+                </tr>
+            `;
+        });
+        
+        html += `
+                </tbody>
+            </table>
+        `;
+        leaderboardContainer.innerHTML = html;
+    };
+
     // --- EVENT HANDLING ---
     nomineeContainer.addEventListener('click', async (e) => {
         if (e.target.classList.contains('vote-button')) {
+            if (checkPhase() >= 2) return; // Prevent voting if locked
+            
             if (!voterName) {
+
                 nameModalOverlay.classList.add('visible');
                 nameInput.focus();
                 return;
@@ -391,7 +504,7 @@ document.addEventListener('DOMContentLoaded', () => {
             await saveVote(voterName, id, category);
 
             await loadVotes();
-            updateUI();
+            await updateUI();
         }
     });
     
@@ -438,10 +551,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
     // --- UI UPDATES ---
-    const updateUI = () => {
+    const updateUI = async () => {
+        const phase = checkPhase();
+        const banner = document.getElementById('lockout-banner');
+        
+        if (phase === 3) {
+            await loadWinners();
+            await loadLeaderboard();
+        }
+
+        if (phase >= 2) {
+            banner.textContent = phase === 2 
+                ? 'Voting is now LOCKED. The ceremony is underway!' 
+                : 'Voting has CLOSED. Check the final results below!';
+            banner.classList.remove('hidden');
+            
+            // Disable all vote buttons
+            document.querySelectorAll('.vote-button').forEach(btn => {
+                btn.disabled = true;
+                btn.style.opacity = '0.5';
+                btn.style.cursor = 'not-allowed';
+            });
+            
+            // Show results section
+            document.getElementById('results-section').style.display = 'block';
+        } else {
+            banner.classList.add('hidden');
+            document.getElementById('results-section').style.display = 'none';
+        }
+
         updateVoteButtons();
         renderResults();
+        renderLeaderboard();
     };
+
     
     const updateVoteButtons = () => {
         const buttons = document.querySelectorAll('.vote-button');
@@ -465,12 +608,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- INITIALIZATION ---
     async function init() {
+        await loadConfig();
         await loadVotes();
         handleVoterName();
         renderCategories();
         renderNominees();
-        updateUI();
+        await updateUI();
     }
+
 
     init();
 });
